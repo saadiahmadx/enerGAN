@@ -1,3 +1,7 @@
+#Saadi Ahmad
+#August 2018, Science Fair Prooject
+#Some of this code (ie. the tensorboard and checkpoint/logging functionality) were borrowed from Naresh1318
+
 import tensorflow as tf
 import numpy as np
 import datetime
@@ -6,13 +10,20 @@ import matplotlib.pyplot as plt
 from matplotlib import gridspec
 from tensorflow.examples.tutorials.mnist import input_data
 
-# Progressbar
-# bar = progressbar.ProgressBar(widgets=['[', progressbar.Timer(), ']', progressbar.Bar(), '(', progressbar.ETA(), ')'])
-
-# Get the MNIST data
 mnist = input_data.read_data_sets('./Data', one_hot=True)
 
-# Parameters
+#when MNIST testing done, shift to using csv file from chemical database with MACCS (or SMILES encoding) imported using method below
+# add return var of method to train() - not done
+'''
+def get_input_data(data_file_name, unique_data_file_name):
+    data = np.load(data_file_name)
+    unique_fp = np.load(unique_data_file_name)
+
+    np.random.shuffle(data)
+    test_data, train_data = np.vsplit(data, [100])
+
+    return test_data, train_data, unique_fp
+'''
 input_dim = 784
 n_l1 = 1000
 n_l2 = 1000
@@ -49,12 +60,7 @@ def form_results():
 
 
 def generate_image_grid(sess, op):
-    """
-    Generates a grid of images by passing a set of numbers to the decoder and getting its output.
-    :param sess: Tensorflow Session required to get the decoder output
-    :param op: Operation that needs to be called inorder to get the decoder output
-    :return: None, displays a matplotlib window with all the merged images.
-    """
+    
     x_points = np.arange(-10, 10, 1.5).astype(np.float32)
     y_points = np.arange(-10, 10, 1.5).astype(np.float32)
 
@@ -92,14 +98,8 @@ def dense(x, n1, n2, name):
         return out
 
 
-# The autoencoder network
 def encoder(x, reuse=False):
-    """
-    Encode part of the autoencoder.
-    :param x: input to the autoencoder
-    :param reuse: True -> Reuse the encoder variables, False -> Create or search of variables before creating
-    :return: tensor which is the hidden latent variable of the autoencoder.
-    """
+    
     if reuse:
         tf.get_variable_scope().reuse_variables()
     with tf.name_scope('Encoder'):
@@ -110,12 +110,7 @@ def encoder(x, reuse=False):
 
 
 def decoder(x, reuse=False):
-    """
-    Decoder part of the autoencoder.
-    :param x: input to the decoder
-    :param reuse: True -> Reuse the decoder variables, False -> Create or search of variables before creating
-    :return: tensor which should ideally be the input given to the encoder.
-    """
+    
     if reuse:
         tf.get_variable_scope().reuse_variables()
     with tf.name_scope('Decoder'):
@@ -126,13 +121,7 @@ def decoder(x, reuse=False):
 
 
 def discriminator(x, reuse=False):
-    """
-    Discriminator that is used to match the posterior distribution with a given prior distribution.
-    :param x: tensor of shape [batch_size, z_dim]
-    :param reuse: True -> Reuse the discriminator variables,
-                  False -> Create or search of variables before creating
-    :return: tensor of shape [batch_size, 1]
-    """
+    
     if reuse:
         tf.get_variable_scope().reuse_variables()
     with tf.name_scope('Discriminator'):
@@ -143,11 +132,7 @@ def discriminator(x, reuse=False):
 
 
 def train(train_model=True):
-    """
-    Used to train the autoencoder by passing in the necessary inputs.
-    :param train_model: True -> Train the model, False -> Load the latest trained model and show the image grid.
-    :return: does not return anything
-    """
+    
     with tf.variable_scope(tf.get_variable_scope()):
         encoder_output = encoder(x_input)
         decoder_output = decoder(encoder_output)
@@ -175,7 +160,6 @@ def train(train_model=True):
     dc_var = [var for var in all_variables if 'dc_' in var.name]
     en_var = [var for var in all_variables if 'e_' in var.name]
 
-    # Optimizers
     autoencoder_optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate,
                                                    beta1=beta1).minimize(autoencoder_loss)
     discriminator_optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate,
@@ -185,10 +169,12 @@ def train(train_model=True):
 
     init = tf.global_variables_initializer()
 
-    # Reshape immages to display them
     input_images = tf.reshape(x_input, [-1, 28, 28, 1])
     generated_images = tf.reshape(decoder_output, [-1, 28, 28, 1])
 
+    
+    
+    
     # Tensorboard visualization
     tf.summary.scalar(name='Autoencoder Loss', tensor=autoencoder_loss)
     tf.summary.scalar(name='Discriminator Loss', tensor=dc_loss)
@@ -242,5 +228,7 @@ def train(train_model=True):
             saver.restore(sess, save_path=tf.train.latest_checkpoint(results_path + '/' + all_results[-1] + '/Saved_models/'))
             generate_image_grid(sess, op=decoder_image)
 
+            
+            
 if __name__ == '__main__':
     train(train_model=True)
