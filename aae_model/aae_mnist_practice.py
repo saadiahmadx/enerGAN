@@ -24,6 +24,7 @@ def get_input_data(data_file_name, unique_data_file_name):
 
     return test_data, train_data, unique_fp
 '''
+#Hyperparameters -- do not change until chem data code works
 input_dim = 784
 n_l1 = 1000
 n_l2 = 1000
@@ -60,7 +61,7 @@ def form_results():
 
 
 def generate_image_grid(sess, op):
-    
+#only for MNIST    
     x_points = np.arange(-10, 10, 1.5).astype(np.float32)
     y_points = np.arange(-10, 10, 1.5).astype(np.float32)
 
@@ -82,14 +83,7 @@ def generate_image_grid(sess, op):
 
 
 def dense(x, n1, n2, name):
-    """
-    Used to create a dense layer.
-    :param x: input tensor to the dense layer
-    :param n1: no. of input neurons
-    :param n2: no. of output neurons
-    :param name: name of the entire dense layer.i.e, variable scope name.
-    :return: tensor with shape [batch_size, n2]
-    """
+    
     with tf.variable_scope(name, reuse=None):
         weights = tf.get_variable("weights", shape=[n1, n2],
                                   initializer=tf.random_normal_initializer(mean=0., stddev=0.01))
@@ -110,7 +104,7 @@ def encoder(x, reuse=False):
 
 
 def decoder(x, reuse=False):
-    
+    #reuse used to check/prevent null data errors
     if reuse:
         tf.get_variable_scope().reuse_variables()
     with tf.name_scope('Decoder'):
@@ -176,6 +170,7 @@ def train(train_model=True):
     
     
     # Tensorboard visualization
+    #onlyy for MNIST (except the loss fxns)
     tf.summary.scalar(name='Autoencoder Loss', tensor=autoencoder_loss)
     tf.summary.scalar(name='Discriminator Loss', tensor=dc_loss)
     tf.summary.scalar(name='Generator Loss', tensor=generator_loss)
@@ -185,7 +180,7 @@ def train(train_model=True):
     tf.summary.image(name='Generated Images', tensor=generated_images, max_outputs=10)
     summary_op = tf.summary.merge_all()
 
-    # Saving the model
+    # Saving the model 
     saver = tf.train.Saver()
     step = 0
     with tf.Session() as sess:
